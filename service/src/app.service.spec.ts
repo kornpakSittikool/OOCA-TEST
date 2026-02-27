@@ -1,30 +1,17 @@
 import { BadRequestException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-describe('AppController', () => {
-  let appController: AppController;
+describe('AppService', () => {
+  let appService: AppService;
 
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
-    }).compile();
-
-    appController = app.get<AppController>(AppController);
-  });
-
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
-    });
+  beforeEach(() => {
+    appService = new AppService();
   });
 
   describe('calculateFoodPrice', () => {
     it('should return subtotal without discounts for a regular order', () => {
       expect(
-        appController.calculateFoodPrice({
+        appService.calculateFoodPrice({
           isMember: false,
           items: [
             {
@@ -53,7 +40,7 @@ describe('AppController', () => {
 
     it('should apply member discount to subtotal', () => {
       expect(
-        appController.calculateFoodPrice({
+        appService.calculateFoodPrice({
           isMember: true,
           items: [
             {
@@ -93,7 +80,7 @@ describe('AppController', () => {
 
     it('should apply bundle discount for eligible menus ordered in pairs', () => {
       expect(
-        appController.calculateFoodPrice({
+        appService.calculateFoodPrice({
           isMember: false,
           items: [
             {
@@ -122,7 +109,7 @@ describe('AppController', () => {
 
     it('should combine bundle discount and member discount', () => {
       expect(
-        appController.calculateFoodPrice({
+        appService.calculateFoodPrice({
           isMember: true,
           items: [
             {
@@ -151,7 +138,7 @@ describe('AppController', () => {
 
     it('should throw when a menu cannot be found', () => {
       expect(() =>
-        appController.calculateFoodPrice({
+        appService.calculateFoodPrice({
           isMember: false,
           items: [
             {
