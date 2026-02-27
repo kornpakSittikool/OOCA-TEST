@@ -19,4 +19,25 @@ describe('AppController', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
   });
+
+  describe('createUser', () => {
+    it('should return the validated payload', () => {
+      expect(
+        appController.createUser({
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          age: 28,
+          nickname: 'jane',
+        }),
+      ).toEqual({
+        message: 'User payload is valid',
+        data: {
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          age: 28,
+          nickname: 'jane',
+        },
+      });
+    });
+  });
 });

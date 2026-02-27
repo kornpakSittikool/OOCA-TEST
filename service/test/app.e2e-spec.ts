@@ -22,4 +22,52 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect('Hello World!');
   });
+
+  it('/users (POST)', () => {
+    return request(app.getHttpServer())
+      .post('/users')
+      .send({
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+        age: 28,
+        nickname: 'jane',
+      })
+      .expect(201)
+      .expect({
+        message: 'User payload is valid',
+        data: {
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          age: 28,
+          nickname: 'jane',
+        },
+      });
+  });
+
+  it('/users (POST) rejects invalid payload', () => {
+    return request(app.getHttpServer())
+      .post('/users')
+      .send({
+        name: 'J',
+        email: 'not-an-email',
+        age: 15,
+      })
+      .expect(400)
+      .expect((response) => {
+        expect(response.body.message).toBe('Validation failed');
+        expect(response.body.errors).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: 'name',
+            }),
+            expect.objectContaining({
+              path: 'email',
+            }),
+            expect.objectContaining({
+              path: 'age',
+            }),
+          ]),
+        );
+      });
+  });
 });
