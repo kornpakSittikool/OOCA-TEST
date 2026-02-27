@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { CreateUserDto } from './dto/create-user.dto';
+import type { CreateUserInput } from './contracts/create-user.contract';
 
 @Injectable()
 export class AppService {
@@ -7,7 +7,7 @@ export class AppService {
     return 'Hello World!';
   }
 
-  createUser(payload: CreateUserDto) {
+  createUser(payload: CreateUserInput) {
     return {
       message: 'User payload is valid',
       data: payload,

@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
-import { CreateUserDto } from './dto/create-user.dto';
-import { createUserSchema } from './schemas/create-user.schema';
+import { ApiZodBody } from './common/swagger/api-zod-body.decorator';
+import { CreateUserDto } from './contracts/create-user.contract';
+import type { CreateUserInput } from './contracts/create-user.contract';
 
 @Controller()
 @ApiTags('Example')
@@ -17,9 +18,9 @@ export class AppController {
 
   @Post('users')
   @ApiOperation({ summary: 'Example endpoint using Zod validation' })
-  @ApiBody({ type: CreateUserDto })
+  @ApiZodBody(CreateUserDto)
   createUser(
-    @Body(new ZodValidationPipe(createUserSchema)) payload: CreateUserDto,
+    @Body(new ZodValidationPipe(CreateUserDto.schema)) payload: CreateUserInput,
   ) {
     return this.appService.createUser(payload);
   }
