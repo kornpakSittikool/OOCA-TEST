@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
-import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
-import { ApiZodBody } from './common/swagger/api-zod-body.decorator';
+import { ApiZodBody } from './common/zod/api-zod-body.decorator';
+import { ZodValidationPipe } from './common/zod/zod-validation.pipe';
 import { CreateUserDto } from './contracts/create-user.contract';
 import type { CreateUserInput } from './contracts/create-user.contract';
 

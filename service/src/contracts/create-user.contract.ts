@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createZodDto } from '../common/dto/create-zod-dto';
+import { createZodDto } from '../common/zod/create-zod-dto';
 
 export const CreateUserSchema = z.object({
   name: z
