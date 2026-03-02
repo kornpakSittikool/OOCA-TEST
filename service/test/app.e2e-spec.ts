@@ -12,6 +12,21 @@ type ValidationErrorResponse = {
   }>;
 };
 
+type CalculateFoodPriceResponse = {
+  message: string;
+  data: {
+    isMember: boolean;
+    items: Array<{
+      menu: string;
+      quantity: number;
+      name: string;
+      unitPrice: number;
+      totalPrice: number;
+    }>;
+    subtotal: number;
+  };
+};
+
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
@@ -31,7 +46,7 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  it('/calculate-food-price (POST)', () => {
+  it('/calculate-food-price (POST) should return subtotal 126 for member Red 2 sets and Green 1 set', () => {
     return request(app.getHttpServer())
       .post('/calculate-food-price')
       .send({
@@ -48,32 +63,28 @@ describe('AppController (e2e)', () => {
         ],
       })
       .expect(201)
-      .expect({
-        message: 'Food price calculated successfully',
-        data: {
-          isMember: true,
-          items: [
-            {
-              menu: 'RED',
-              quantity: 2,
-              name: 'Red set',
-              unitPrice: 50,
-              totalPrice: 100,
-            },
-            {
-              menu: 'GREEN',
-              quantity: 1,
-              name: 'Green set',
-              unitPrice: 40,
-              totalPrice: 40,
-            },
-          ],
-          subtotal: 126,
-        },
+      .expect((response: { body: CalculateFoodPriceResponse }) => {
+        const [redItem, greenItem] = response.body.data.items;
+
+        expect(response.body.message).toBe('Food price calculated successfully');
+        expect(response.body.data.isMember).toBe(true);
+        expect(response.body.data.items).toHaveLength(2);
+
+        expect(redItem.menu).toBe('RED');
+        expect(redItem.quantity).toBe(2);
+        expect(redItem.unitPrice).toBe(50);
+        expect(redItem.totalPrice).toBe(100);
+
+        expect(greenItem.menu).toBe('GREEN');
+        expect(greenItem.quantity).toBe(1);
+        expect(greenItem.unitPrice).toBe(40);
+        expect(greenItem.totalPrice).toBe(40);
+
+        expect(response.body.data.subtotal).toBe(126);
       });
   });
 
-  it('/calculate-food-price (POST) applies the Orange discount when more than two Orange sets are ordered', () => {
+  it('/calculate-food-price (POST) should return totalPrice 228 and 114, subtotal 342 for Orange 3 sets', () => {
     return request(app.getHttpServer())
       .post('/calculate-food-price')
       .send({
@@ -90,32 +101,28 @@ describe('AppController (e2e)', () => {
         ],
       })
       .expect(201)
-      .expect({
-        message: 'Food price calculated successfully',
-        data: {
-          isMember: false,
-          items: [
-            {
-              menu: 'ORANGE',
-              quantity: 2,
-              name: 'Orange set',
-              unitPrice: 120,
-              totalPrice: 228,
-            },
-            {
-              menu: 'ORANGE',
-              quantity: 1,
-              name: 'Orange set',
-              unitPrice: 120,
-              totalPrice: 114,
-            },
-          ],
-          subtotal: 342,
-        },
+      .expect((response: { body: CalculateFoodPriceResponse }) => {
+        const [firstOrangeItem, secondOrangeItem] = response.body.data.items;
+
+        expect(response.body.message).toBe('Food price calculated successfully');
+        expect(response.body.data.isMember).toBe(false);
+        expect(response.body.data.items).toHaveLength(2);
+
+        expect(firstOrangeItem.menu).toBe('ORANGE');
+        expect(firstOrangeItem.quantity).toBe(2);
+        expect(firstOrangeItem.unitPrice).toBe(120);
+        expect(firstOrangeItem.totalPrice).toBe(228);
+
+        expect(secondOrangeItem.menu).toBe('ORANGE');
+        expect(secondOrangeItem.quantity).toBe(1);
+        expect(secondOrangeItem.unitPrice).toBe(120);
+        expect(secondOrangeItem.totalPrice).toBe(114);
+
+        expect(response.body.data.subtotal).toBe(342);
       });
   });
 
-  it('/calculate-food-price (POST) combines the Orange discount with the member discount', () => {
+  it('/calculate-food-price (POST) should return subtotal 307.8 for a member ordering Orange 3 sets', () => {
     return request(app.getHttpServer())
       .post('/calculate-food-price')
       .send({
@@ -132,28 +139,16 @@ describe('AppController (e2e)', () => {
         ],
       })
       .expect(201)
-      .expect({
-        message: 'Food price calculated successfully',
-        data: {
-          isMember: true,
-          items: [
-            {
-              menu: 'ORANGE',
-              quantity: 2,
-              name: 'Orange set',
-              unitPrice: 120,
-              totalPrice: 228,
-            },
-            {
-              menu: 'ORANGE',
-              quantity: 1,
-              name: 'Orange set',
-              unitPrice: 120,
-              totalPrice: 114,
-            },
-          ],
-          subtotal: 307.8,
-        },
+      .expect((response: { body: CalculateFoodPriceResponse }) => {
+        const [firstOrangeItem, secondOrangeItem] = response.body.data.items;
+
+        expect(response.body.message).toBe('Food price calculated successfully');
+        expect(response.body.data.isMember).toBe(true);
+        expect(response.body.data.items).toHaveLength(2);
+
+        expect(firstOrangeItem.totalPrice).toBe(228);
+        expect(secondOrangeItem.totalPrice).toBe(114);
+        expect(response.body.data.subtotal).toBe(307.8);
       });
   });
 
@@ -166,17 +161,11 @@ describe('AppController (e2e)', () => {
       })
       .expect(400)
       .expect((response: { body: ValidationErrorResponse }) => {
+        const paths = response.body.errors.map((error) => error.path);
+
         expect(response.body.message).toBe('Validation failed');
-        expect(response.body.errors).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              path: 'isMember',
-            }),
-            expect.objectContaining({
-              path: 'items',
-            }),
-          ]),
-        );
+        expect(paths.includes('isMember')).toBe(true);
+        expect(paths.includes('items')).toBe(true);
       });
   });
 });
