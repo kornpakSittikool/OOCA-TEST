@@ -73,15 +73,19 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/calculate-food-price (POST) applies bundle discount for eligible pair orders', () => {
+  it('/calculate-food-price (POST) applies the Orange discount when more than two Orange sets are ordered', () => {
     return request(app.getHttpServer())
       .post('/calculate-food-price')
       .send({
         isMember: false,
         items: [
           {
-            menu: 'GREEN',
+            menu: 'ORANGE',
             quantity: 2,
+          },
+          {
+            menu: 'ORANGE',
+            quantity: 1,
           },
         ],
       })
@@ -92,14 +96,63 @@ describe('AppController (e2e)', () => {
           isMember: false,
           items: [
             {
-              menu: 'GREEN',
+              menu: 'ORANGE',
               quantity: 2,
-              name: 'Green set',
-              unitPrice: 40,
-              totalPrice: 76,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 228,
+            },
+            {
+              menu: 'ORANGE',
+              quantity: 1,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 114,
             },
           ],
-          subtotal: 76,
+          subtotal: 342,
+        },
+      });
+  });
+
+  it('/calculate-food-price (POST) combines the Orange discount with the member discount', () => {
+    return request(app.getHttpServer())
+      .post('/calculate-food-price')
+      .send({
+        isMember: true,
+        items: [
+          {
+            menu: 'ORANGE',
+            quantity: 2,
+          },
+          {
+            menu: 'ORANGE',
+            quantity: 1,
+          },
+        ],
+      })
+      .expect(201)
+      .expect({
+        message: 'Food price calculated successfully',
+        data: {
+          isMember: true,
+          items: [
+            {
+              menu: 'ORANGE',
+              quantity: 2,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 228,
+            },
+            {
+              menu: 'ORANGE',
+              quantity: 1,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 114,
+            },
+          ],
+          subtotal: 307.8,
         },
       });
   });

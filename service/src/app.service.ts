@@ -7,9 +7,8 @@ export class AppService {
   private readonly menuMap = new Map(
     listMenu.map((menu) => [menu.id, menu] as const),
   );
-  private readonly bundleDiscountMenus = new Set<
-    CalculateFoodPriceInput['items'][number]['menu']
-  >(['ORANGE', 'PINK', 'GREEN']);
+  private readonly orangeDiscountMenu: CalculateFoodPriceInput['items'][number]['menu'] =
+    'ORANGE';
 
   getHello(): string {
     return 'Hello World!';
@@ -23,7 +22,11 @@ export class AppService {
   }
 
   calculateFoodPrice(payload: CalculateFoodPriceInput) {
-    const items = this.buildPricedItems(payload.items);
+    const orangeQuantity = this.getMenuQuantity(
+      payload.items,
+      this.orangeDiscountMenu,
+    );
+    const items = this.buildPricedItems(payload.items, orangeQuantity);
     const baseSubtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const subtotal = this.applyMemberDiscount(baseSubtotal, payload.isMember);
 
@@ -37,7 +40,10 @@ export class AppService {
     };
   }
 
-  private buildPricedItems(items: CalculateFoodPriceInput['items']) {
+  private buildPricedItems(
+    items: CalculateFoodPriceInput['items'],
+    orangeQuantity: number,
+  ) {
     return items.map((item) => {
       const menu = this.menuMap.get(item.menu);
 
@@ -51,24 +57,37 @@ export class AppService {
         ...item,
         name: menu.name,
         unitPrice: menu.price,
-        totalPrice: this.applyBundleDiscount(
+        totalPrice: this.applyOrangeDiscount(
           item.menu,
-          item.quantity,
+          orangeQuantity,
           lineTotal,
         ),
       };
     });
   }
 
-  private applyBundleDiscount(
+  private getMenuQuantity(
+    items: CalculateFoodPriceInput['items'],
     menuId: CalculateFoodPriceInput['items'][number]['menu'],
-    quantity: number,
+  ) {
+    return items.reduce((sum, item) => {
+      if (item.menu !== menuId) {
+        return sum;
+      }
+
+      return sum + item.quantity;
+    }, 0);
+  }
+
+  private applyOrangeDiscount(
+    menuId: CalculateFoodPriceInput['items'][number]['menu'],
+    orangeQuantity: number,
     totalPrice: number,
   ) {
-    const isEligibleMenu = this.bundleDiscountMenus.has(menuId);
-    const isEvenBundle = quantity >= 2 && quantity % 2 === 0;
+    const isEligibleMenu = menuId === this.orangeDiscountMenu;
+    const hasEnoughOrangeSets = orangeQuantity > 2;
 
-    if (!isEligibleMenu || !isEvenBundle) {
+    if (!isEligibleMenu || !hasEnoughOrangeSets) {
       return totalPrice;
     }
 

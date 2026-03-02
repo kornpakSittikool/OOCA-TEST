@@ -22,13 +22,17 @@ describe('AppController', () => {
   });
 
   describe('calculateFoodPrice', () => {
-    it('should return subtotal without discounts for a regular order', () => {
+    it('should calculate a Red set and Green set order at full price', () => {
       expect(
         appController.calculateFoodPrice({
           isMember: false,
           items: [
             {
               menu: 'RED',
+              quantity: 1,
+            },
+            {
+              menu: 'GREEN',
               quantity: 1,
             },
           ],
@@ -45,20 +49,27 @@ describe('AppController', () => {
               unitPrice: 50,
               totalPrice: 50,
             },
+            {
+              menu: 'GREEN',
+              quantity: 1,
+              name: 'Green set',
+              unitPrice: 40,
+              totalPrice: 40,
+            },
           ],
-          subtotal: 50,
+          subtotal: 90,
         },
       });
     });
 
-    it('should apply member discount to subtotal', () => {
+    it('should apply a 10% member discount to the bill total', () => {
       expect(
         appController.calculateFoodPrice({
           isMember: true,
           items: [
             {
               menu: 'RED',
-              quantity: 2,
+              quantity: 1,
             },
             {
               menu: 'GREEN',
@@ -73,10 +84,10 @@ describe('AppController', () => {
           items: [
             {
               menu: 'RED',
-              quantity: 2,
+              quantity: 1,
               name: 'Red set',
               unitPrice: 50,
-              totalPrice: 100,
+              totalPrice: 50,
             },
             {
               menu: 'GREEN',
@@ -86,18 +97,98 @@ describe('AppController', () => {
               totalPrice: 40,
             },
           ],
-          subtotal: 126,
+          subtotal: 81,
         },
       });
     });
 
-    it('should apply bundle discount for eligible menus ordered in pairs', () => {
+    it('should apply a 5% discount when more than two Orange sets are ordered in a bill', () => {
       expect(
         appController.calculateFoodPrice({
           isMember: false,
           items: [
             {
-              menu: 'GREEN',
+              menu: 'ORANGE',
+              quantity: 2,
+            },
+            {
+              menu: 'ORANGE',
+              quantity: 1,
+            },
+          ],
+        }),
+      ).toEqual({
+        message: 'Food price calculated successfully',
+        data: {
+          isMember: false,
+          items: [
+            {
+              menu: 'ORANGE',
+              quantity: 2,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 228,
+            },
+            {
+              menu: 'ORANGE',
+              quantity: 1,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 114,
+            },
+          ],
+          subtotal: 342,
+        },
+      });
+    });
+
+    it('should combine the Orange discount with the member discount', () => {
+      expect(
+        appController.calculateFoodPrice({
+          isMember: true,
+          items: [
+            {
+              menu: 'ORANGE',
+              quantity: 2,
+            },
+            {
+              menu: 'ORANGE',
+              quantity: 1,
+            },
+          ],
+        }),
+      ).toEqual({
+        message: 'Food price calculated successfully',
+        data: {
+          isMember: true,
+          items: [
+            {
+              menu: 'ORANGE',
+              quantity: 2,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 228,
+            },
+            {
+              menu: 'ORANGE',
+              quantity: 1,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 114,
+            },
+          ],
+          subtotal: 307.8,
+        },
+      });
+    });
+
+    it('should not apply the Orange discount when two or fewer sets are ordered', () => {
+      expect(
+        appController.calculateFoodPrice({
+          isMember: false,
+          items: [
+            {
+              menu: 'ORANGE',
               quantity: 2,
             },
           ],
@@ -108,43 +199,14 @@ describe('AppController', () => {
           isMember: false,
           items: [
             {
-              menu: 'GREEN',
+              menu: 'ORANGE',
               quantity: 2,
-              name: 'Green set',
-              unitPrice: 40,
-              totalPrice: 76,
+              name: 'Orange set',
+              unitPrice: 120,
+              totalPrice: 240,
             },
           ],
-          subtotal: 76,
-        },
-      });
-    });
-
-    it('should combine bundle discount and member discount', () => {
-      expect(
-        appController.calculateFoodPrice({
-          isMember: true,
-          items: [
-            {
-              menu: 'GREEN',
-              quantity: 2,
-            },
-          ],
-        }),
-      ).toEqual({
-        message: 'Food price calculated successfully',
-        data: {
-          isMember: true,
-          items: [
-            {
-              menu: 'GREEN',
-              quantity: 2,
-              name: 'Green set',
-              unitPrice: 40,
-              totalPrice: 76,
-            },
-          ],
-          subtotal: 68.4,
+          subtotal: 240,
         },
       });
     });
